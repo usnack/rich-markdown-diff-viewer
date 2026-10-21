@@ -1,0 +1,7 @@
+{
+  "name": "base-template",
+  "private": true,
+  "scripts": {
+    "fetch-project-skills": "node scripts/fetch-project-skills.js"
+  }
+}
