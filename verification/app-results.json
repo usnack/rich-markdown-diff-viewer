@@ -1,0 +1,229 @@
+{
+  "checks" : [
+    {
+      "detail" : {
+        "files" : 7,
+        "repo" : "\/Users\/usnack\/orca\/rich-markdown-diff-viewer\/verification\/demo",
+        "selected" : "01-제품 설계.md"
+      },
+      "name" : "native snapshot loaded",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "rich Markdown rendered",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "phrase highlights",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "Mermaid rendered",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "Mermaid error isolated",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "HTML details rendered",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "unsafe script removed",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "document CSS isolated",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "historical images distinct",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "historical images both displayed",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "document stylesheet reaches another block",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "native bridge isolated",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "split grid equal row heights",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "changes only",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "change navigation",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "HTML disclosure toggles",
+      "pass" : true
+    },
+    {
+      "detail" : {
+        "files" : [
+          "01-제품 설계.md",
+          "02-단원-기획\/src\/03-개발환경\/01-리눅스.md",
+          "02-단원-기획\/src\/03-개발환경\/02-프로그래밍.md",
+          "삭제 문서.md",
+          "새 문서.md",
+          "docs\/참고 문서.md"
+        ],
+        "selected" : "01-제품 설계.md"
+      },
+      "name" : "comparison unstaged",
+      "pass" : true
+    },
+    {
+      "detail" : {
+        "files" : [
+          "01-제품 설계.md",
+          "변경 이름.md"
+        ],
+        "selected" : "01-제품 설계.md"
+      },
+      "name" : "comparison staged",
+      "pass" : true
+    },
+    {
+      "detail" : {
+        "files" : [
+          "01-제품 설계.md",
+          "02-단원-기획\/src\/03-개발환경\/01-리눅스.md",
+          "02-단원-기획\/src\/03-개발환경\/02-프로그래밍.md",
+          "변경 이름.md",
+          "삭제 문서.md",
+          "새 문서.md",
+          "docs\/참고 문서.md"
+        ],
+        "selected" : "01-제품 설계.md"
+      },
+      "name" : "comparison total",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "pause button",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "resume button",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "nested repository tree rendered",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "tree collapse retained after refresh",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "comments restored from previous app launch",
+      "pass" : true
+    },
+    {
+      "detail" : {
+        "anchor" : "<section class=\"row split changed\" id=\"block-1xvb2vj-0\" data-status=\"modify\"><div class=\"cell delete\"><div class=\"change-label\">− 변경 전 · L7 · ◇ 서식·원문 변경<\/div><div class=\"document\"><\/div><div class=\"block-comment-actions\"><button class=\"block-comment-button\" data-start=\"7\" data-end=\"9\" data-version=\"HEAD\" data-count=\"0\">＋ 코멘트 · L7–9<\/button><\/div><\/",
+        "buttonLabel" : "선택한 L7–8에 코멘트",
+        "collapsed" : true,
+        "composed" : true,
+        "end" : "8",
+        "focus" : "<section class=\"row split changed\" id=\"block-1xvb2vj-0\" data-status=\"modify\"><div class=\"cell delete\"><div class=\"change-label\">− 변경 전 · L7 · ◇ 서식·원문 변경<\/div><div class=\"document\"><\/div><div class=\"block-comment-actions\"><button class=\"block-comment-button\" data-start=\"7\" data-end=\"9\" data-version=\"HEAD\" data-count=\"0\">＋ 코멘트 · L7–9<\/button><\/div><\/",
+        "host" : true,
+        "ranges" : [
+          {
+            "end" : "<span data-rmd-start=\"8\" data-rmd-end=\"8\">렌더링 문서 비교<\/span>",
+            "start" : "<span data-rmd-start=\"7\" data-rmd-end=\"7\">Git 저장소 열기<\/span>"
+          }
+        ],
+        "rootGetSelection" : false,
+        "start" : "7",
+        "text" : "Git 저장소 열기\n 렌더링 문서 비교"
+      },
+      "name" : "rendered text selection maps to Markdown lines",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "comment persisted through native bridge",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "exact source line range and excerpt",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "multiple comments on identical lines",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "individual copy acknowledged",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "copy all acknowledged",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "comments scoped to current document",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "comments restored on file return",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "comment cards use raw text",
+      "pass" : true
+    }
+  ],
+  "clipboardText" : "File: 01-제품 설계.md\nSource: markdown\n\nLines 7-10\nExcerpt:\n> - [x] Git 저장소 열기\n> - [x] 렌더링 문서 비교\n>   - 한글 문장과 **중요한 내용** 표시\n> \nUser comment: \"asdf\"\n\nFile: 01-제품 설계.md\nSource: markdown\n\nLines 7-10\nExcerpt:\n> - [x] Git 저장소 열기\n> - [x] 렌더링 문서 비교\n>   - 한글 문장과 **중요한 내용** 표시\n> \nUser comment: \"second comment\"",
+  "failures" : [
+
+  ],
+  "nativeClipboardCheck" : true,
+  "state" : {
+    "layout" : "split",
+    "mode" : "total",
+    "repo" : "\/Users\/usnack\/orca\/rich-markdown-diff-viewer\/verification\/demo",
+    "selected" : "01-제품 설계.md"
+  },
+  "timestamp" : "2026-10-21T10:33:38.308Z"
+}

@@ -1,0 +1,18 @@
+#!/bin/sh
+set -eu
+case "${1-}" in
+  --help|-h) printf '%s\n' '사용법: rmdiff [저장소 폴더 | Markdown 파일]' '경로를 생략하면 현재 디렉터리를 엽니다.' '실행 중인 앱에도 경로를 전달합니다. 문서는 읽기 전용입니다.'; exit 0 ;;
+esac
+if [ "$#" -gt 1 ]; then printf '%s\n' 'rmdiff: 경로를 하나만 지정하세요. --help 참고' >&2; exit 2; fi
+SOURCE=$0
+while [ -L "$SOURCE" ]; do
+  BASE=$(CDPATH= cd -- "$(dirname -- "$SOURCE")" && pwd -P)
+  LINK=$(readlink "$SOURCE")
+  case "$LINK" in /*) SOURCE=$LINK ;; *) SOURCE=$BASE/$LINK ;; esac
+done
+ROOT=$(CDPATH= cd -- "$(dirname -- "$SOURCE")/.." && pwd -P)
+APP=$ROOT/dist/Rich\ Markdown\ Diff.app
+TARGET=${1:-$PWD}
+if [ ! -e "$TARGET" ]; then printf 'rmdiff: 경로가 존재하지 않습니다: %s\n' "$TARGET" >&2; exit 2; fi
+if [ ! -d "$APP" ]; then printf 'rmdiff: 앱을 찾을 수 없습니다. 프로젝트에서 npm run build를 실행하세요: %s\n' "$APP" >&2; exit 1; fi
+exec /usr/bin/open -a "$APP" -- "$TARGET"

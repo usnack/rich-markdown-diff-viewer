@@ -11,3 +11,9 @@
 .obsidian/cache
 .obsidian/plugins/obsidian-git/data.json
 
+# Rich Markdown Diff build and test artifacts
+node_modules/
+dist/
+.build/
+verification/demo/
+verification/test-comments.json

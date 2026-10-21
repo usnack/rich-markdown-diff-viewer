@@ -1,0 +1,28 @@
+{
+  "indexRefresh" : {
+    "mode" : "staged",
+    "stagedUpdated" : true
+  },
+  "paused" : {
+    "paused" : true,
+    "unchanged" : true
+  },
+  "rapidSelection" : {
+    "expected" : "docs\/참고 문서.md",
+    "pass" : true,
+    "selected" : "docs\/참고 문서.md"
+  },
+  "restored" : true,
+  "resumed" : {
+    "anchorRetained" : true,
+    "offsetError" : 0,
+    "pass" : true,
+    "scrollTop" : 6334,
+    "updated" : true
+  },
+  "start" : {
+    "scrollTop" : 6152,
+    "selected" : "01-제품 설계.md",
+    "targetFound" : true
+  }
+}

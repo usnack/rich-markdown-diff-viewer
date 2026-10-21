@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "beforePID": 52210,
+  "afterPID": 60358,
+  "expectedFile": "새 문서.md",
+  "selectedRestored": true,
+  "repoRestored": true
+}

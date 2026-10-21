@@ -1,0 +1,10 @@
+import fs from 'node:fs';import assert from 'node:assert/strict';
+const app=JSON.parse(fs.readFileSync('verification/app-results.json','utf8'));
+assert.deepEqual(app.failures,[],JSON.stringify(app.failures));
+assert.equal(app.nativeClipboardCheck,true,"native clipboard must exactly match comment exports");
+const flow=JSON.parse(fs.readFileSync('verification/workflow-results.json','utf8'));
+assert.ok(flow.start.targetFound);assert.ok(flow.start.scrollTop>1000);
+assert.ok(flow.paused.paused&&flow.paused.unchanged,'paused snapshot must stay frozen');
+assert.ok(flow.resumed.pass,`scroll offset changed: ${flow.resumed.offsetError}`);
+assert.ok(flow.rapidSelection.pass);assert.ok(flow.indexRefresh.stagedUpdated);assert.ok(flow.restored);
+console.log(`MACOS APP: ${app.checks.length} checks passed; workflow passed, anchor error ${flow.resumed.offsetError}px`);

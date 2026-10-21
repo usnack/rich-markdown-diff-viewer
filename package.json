@@ -1,7 +1,31 @@
 {
-  "name": "base-template",
-  "private": true,
+  "name": "rich-markdown-diff",
+  "version": "1.1.0",
+  "description": "Read-only macOS rich Markdown Git diff viewer",
   "scripts": {
-    "fetch-project-skills": "node scripts/fetch-project-skills.js"
+    "build": "bash scripts/build.sh",
+    "test": "node --test tests/*.test.js && bash scripts/test-git.sh && bash scripts/test-comments.sh",
+    "fetch-project-skills": "node scripts/fetch-project-skills.js",
+    "package": "npm run build && bash scripts/package.sh"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "diff": "9.0.0",
+    "dompurify": "3.4.17",
+    "hast-util-to-html": "9.0.5",
+    "mdast-util-to-hast": "13.2.1",
+    "mermaid": "12.2.0",
+    "remark-gfm": "4.0.1",
+    "remark-parse": "11.0.0",
+    "unified": "11.0.5"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "jsdom": "26.1.0"
+  },
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=22.12.0"
   }
 }

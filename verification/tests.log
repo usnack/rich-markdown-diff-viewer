@@ -1,0 +1,158 @@
+
+> rich-markdown-diff@1.1.0 test
+> node --test tests/*.test.js && bash scripts/test-git.sh && bash scripts/test-comments.sh
+
+TAP version 13
+# Subtest: line ranges normalize, preserve raw Markdown and CRLF
+ok 1 - line ranges normalize, preserve raw Markdown and CRLF
+  ---
+  duration_ms: 0.692959
+  type: 'test'
+  ...
+# Subtest: source maps keep before/after positions independent of inserted blocks
+ok 2 - source maps keep before/after positions independent of inserted blocks
+  ---
+  duration_ms: 6.133292
+  type: 'test'
+  ...
+# Subtest: source line click and shift-click submit exact range with multiple comments permitted
+ok 3 - source line click and shift-click submit exact range with multiple comments permitted
+  ---
+  duration_ms: 43.592833
+  type: 'test'
+  ...
+# Subtest: comment body renders as text and exposes individual/all copy commands
+ok 4 - comment body renders as text and exposes individual/all copy commands
+  ---
+  duration_ms: 8.652833
+  type: 'test'
+  ...
+# Subtest: live source changes retain draft and require an explicit new line choice
+ok 5 - live source changes retain draft and require an explicit new line choice
+  ---
+  duration_ms: 7.935041
+  type: 'test'
+  ...
+# Subtest: document switches isolate comments and restore an unfinished draft
+ok 6 - document switches isolate comments and restore an unfinished draft
+  ---
+  duration_ms: 6.754584
+  type: 'test'
+  ...
+# Subtest: WebKit composed selection maps lines even when public selection appears collapsed
+ok 7 - WebKit composed selection maps lines even when public selection appears collapsed
+  ---
+  duration_ms: 4.286583
+  type: 'test'
+  ...
+# Subtest: Korean and grapheme clusters remain intact
+ok 8 - Korean and grapheme clusters remain intact
+  ---
+  duration_ms: 11.053917
+  type: 'test'
+  ...
+# Subtest: format-only and reference destination changes stay visible
+ok 9 - format-only and reference destination changes stay visible
+  ---
+  duration_ms: 8.778
+  type: 'test'
+  ...
+# Subtest: table AST structure survives cell edit
+ok 10 - table AST structure survives cell edit
+  ---
+  duration_ms: 2.466042
+  type: 'test'
+  ...
+# Subtest: lists, tasks, HTML, Mermaid, code retain structures
+ok 11 - lists, tasks, HTML, Mermaid, code retain structures
+  ---
+  duration_ms: 1.973166
+  type: 'test'
+  ...
+# Subtest: inserted blocks do not shift identical anchors
+ok 12 - inserted blocks do not shift identical anchors
+  ---
+  duration_ms: 1.372791
+  type: 'test'
+  ...
+# Subtest: whitespace and unused reference-only changes are explicit
+ok 13 - whitespace and unused reference-only changes are explicit
+  ---
+  duration_ms: 0.912625
+  type: 'test'
+  ...
+# Subtest: added/deleted docs and HTML fallback
+ok 14 - added/deleted docs and HTML fallback
+  ---
+  duration_ms: 1.218125
+  type: 'test'
+  ...
+# Subtest: script, iframe, event, dangerous URLs, form attacks stripped
+ok 15 - script, iframe, event, dangerous URLs, form attacks stripped
+  ---
+  duration_ms: 12.516334
+  type: 'test'
+  ...
+# Subtest: safe disclosure, table, style and checkbox retained, network CSS stripped
+ok 16 - safe disclosure, table, style and checkbox retained, network CSS stripped
+  ---
+  duration_ms: 8.981167
+  type: 'test'
+  ...
+# Subtest: tree retains directory ancestry and duplicate basenames
+ok 17 - tree retains directory ancestry and duplicate basenames
+  ---
+  duration_ms: 0.404834
+  type: 'test'
+  ...
+# Subtest: folders collapse across refresh, selected path expands, selection retains exact file path
+ok 18 - folders collapse across refresh, selected path expands, selection retains exact file path
+  ---
+  duration_ms: 42.230625
+  type: 'test'
+  ...
+1..18
+# tests 18
+# suites 0
+# pass 18
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 295.691625
+PASS: unborn HEAD, untracked, Korean, spaces, newline, ignored
+PASS: unborn staged empty
+PASS: unborn staged initial content
+PASS: clean repository
+PASS: partial staging metadata
+PASS: partially staged HEAD → index
+PASS: partially staged index → work
+PASS: total HEAD → work
+PASS: rename retains both paths
+PASS: deletion
+PASS: external symlink blocked
+PASS: binary rejected
+PASS: historical images read from distinct snapshots
+PASS: missing historical image never falls back
+PASS: external image not embedded
+PASS: traversal image blocked
+PASS: image paths with spaces and parentheses
+PASS: image reference with spaces
+PASS: linked worktree .git file supported
+PASS: literal pathspec filename
+GIT TESTS: 20 passed
+PASS: exact requested export format
+PASS: multiple comments on same range
+PASS: comments survive reloading
+PASS: repository and document scopes isolated
+PASS: quoted and multiline body escaped
+PASS: editing preserves excerpt and range
+PASS: before-side rename and CRLF
+PASS: invalid range rejected
+PASS: invalid range rejected
+PASS: invalid range rejected
+PASS: blank body rejected
+PASS: delete affects only chosen comment
+PASS: corrupt storage preserved
+PASS: context changes when either source changes
+COMMENT TESTS: 14 passed

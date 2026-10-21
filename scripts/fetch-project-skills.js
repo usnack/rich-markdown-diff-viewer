@@ -3,8 +3,11 @@
 // 프로젝트 전체에서 agent/skills 디렉터리를 탐색하여, SKILL.md를 가진 스킬을
 // Codex와 Claude Code 프로젝트 스킬 디렉터리(.agents/skills, .claude/skills)에 연결합니다.
 
-const fs = require("fs");
-const path = require("path");
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const projectRoot = path.resolve(__dirname, "..");
 const targetDirs = [
@@ -14,6 +17,9 @@ const targetDirs = [
 
 const IGNORED_DIR_NAMES = new Set([
   "node_modules",
+  "dist",
+  ".build",
+  "verification",
   ".git",
   ".agents",
   ".claude",
