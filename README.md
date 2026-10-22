@@ -123,6 +123,10 @@ bash scripts/verify-app.sh
 
 문서 스크립트·이벤트 속성·iframe과 위험 링크를 제거하고 CSP로 스크립트/프레임/임의 연결을 제한합니다. 문서 CSS는 허용 속성만 남기고 Shadow DOM에 적용합니다. 네이티브 메시지 핸들러는 별도 WKContentWorld에 등록해 문서의 JavaScript 세계에서 접근하지 못하게 했습니다. 로컬 파일은 저장소 경계 및 심볼릭 링크를 확인합니다. 외부 http(s) 링크는 사용자 클릭 시 브라우저로 엽니다.
 
+## GitHub Release 자동 배포
+
+`release` 브랜치에 푸시하면 테스트·빌드 후 `YYMMDD-짧은커밋해시` 태그의 GitHub Release를 만들고 앱 ZIP, 소스 ZIP, 체크섬을 첨부합니다. 날짜는 마지막 커밋의 커미터 시각을 한국 시간으로 계산합니다. [배포 안내](docs/release.md)를 참고하세요.
+
 ## 알려진 제한
 
 - UTF-8 Markdown만 지원합니다. 문서 4MB, 현재 파일 16MB, 개별 이미지 12MB, Git 응답 64MB, Git 명령 15초 제한이 있습니다. 제한 초과는 오류로 표시합니다.

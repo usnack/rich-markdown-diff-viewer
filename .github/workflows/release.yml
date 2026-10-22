@@ -1,0 +1,85 @@
+name: Release macOS app
+
+on:
+  push:
+    branches: [release]
+  workflow_dispatch:
+
+# Releases use the built-in token; no personal access token is required.
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.ref == 'refs/heads/release' && github.event.deleted != true
+    runs-on: macos-15
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out the pushed commit
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify runner and workflow permissions
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          test "$(uname -m)" = arm64
+          # GITHUB_TOKEN cannot release a commit whose workflow files differ
+          # from the default branch. Merge workflow changes there first.
+          if ! git diff --quiet "refs/remotes/origin/$DEFAULT_BRANCH" HEAD -- .github/workflows; then
+            echo '::error::Merge workflow changes into the default branch before pushing release.'
+            exit 1
+          fi
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Run engine, Git and comment tests
+        run: npm test
+
+      - name: Build and package the app
+        run: npm run package
+
+      - name: Compute release tag from commit time (Asia/Seoul)
+        id: metadata
+        run: |
+          tag=$(bash scripts/release-tag.sh)
+          printf 'tag=%s\n' "$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Upload downloadable workflow artifacts
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: rich-markdown-diff-macos-arm64-${{ steps.metadata.outputs.tag }}
+          path: |
+            dist/Rich Markdown Diff.app.zip
+            dist/rich-markdown-diff-source.zip
+            dist/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
+          overwrite: true
+
+      - name: Publish GitHub Release with app assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.metadata.outputs.tag }}
+        run: |
+          bash scripts/publish-release.sh "$RELEASE_TAG"
+          printf '## Release `%s`\n\n[Download app and source](%s/%s/releases/tag/%s)\n' \
+            "$RELEASE_TAG" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$RELEASE_TAG" >> "$GITHUB_STEP_SUMMARY"

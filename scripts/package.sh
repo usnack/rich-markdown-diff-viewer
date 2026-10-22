@@ -13,7 +13,7 @@ fi
 codesign --verify --deep --strict "$APP"
 ditto -c -k --sequesterRsrc --keepParent "$APP" "$PWD/dist/Rich Markdown Diff.app.zip"
 git archive --format=zip --prefix=rich-markdown-diff-viewer/ --output="$PWD/dist/rich-markdown-diff-source.zip" HEAD
-shasum -a 256 'dist/Rich Markdown Diff.app.zip' dist/rich-markdown-diff-source.zip > dist/SHA256SUMS
+(cd dist && shasum -a 256 'Rich Markdown Diff.app.zip' rich-markdown-diff-source.zip > SHA256SUMS)
 unzip -tq 'dist/Rich Markdown Diff.app.zip'
 unzip -tq dist/rich-markdown-diff-source.zip
 echo "패키지: $PWD/dist"
