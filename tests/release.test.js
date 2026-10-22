@@ -17,13 +17,13 @@ function fixture(t){
 }
 function publication(t,{mode='missing',uploadFails=false,wrongSHA=false}={}){
  const f=fixture(t);const bin=path.join(f.root,'bin'),dist=path.join(f.root,'dist');fs.mkdirSync(bin);fs.mkdirSync(dist);
- for(const name of ['Rich Markdown Diff.app.zip','rich-markdown-diff-source.zip','SHA256SUMS'])fs.writeFileSync(path.join(dist,name),'fixture');
+ for(const name of ['Rich-Markdown-Diff-macos-arm64.app.zip','rich-markdown-diff-source.zip','SHA256SUMS'])fs.writeFileSync(path.join(dist,name),'fixture');
  const log=path.join(f.root,'calls.jsonl');
  fs.writeFileSync(path.join(bin,'gh'),`#!/usr/bin/env node
 const fs=require('node:fs');const args=process.argv.slice(2);fs.appendFileSync(process.env.MOCK_LOG,JSON.stringify(args)+'\\n');
 if(args[1]==='view'){
  if(process.env.MOCK_MODE==='missing')process.exit(1);
- const names=['Rich Markdown Diff.app.zip','rich-markdown-diff-source.zip','SHA256SUMS'];
+ const names=['Rich-Markdown-Diff-macos-arm64.app.zip','rich-markdown-diff-source.zip','SHA256SUMS'].map(name=>name.replaceAll(' ','.'));
  if(process.env.MOCK_MODE==='incomplete')names.pop();
  console.log(JSON.stringify({isDraft:process.env.MOCK_MODE==='draft',targetCommitish:process.env.MOCK_MODE==='wrong-target'?'wrong':process.env.GITHUB_SHA,assets:names.map(name=>({name}))}));
 }else if(args[1]==='upload'&&process.env.FAIL_UPLOAD==='1')process.exit(1);
@@ -37,7 +37,7 @@ test('release tag uses committer date in Seoul, not author date or local executi
  fs.writeFileSync(path.join(f.root,'input'),'uncommitted change');assert.equal(execFileSync('bash',[path.join(project,'scripts/release-tag.sh')],{cwd:f.root,env:{...f.env,TZ:'UTC'},encoding:'utf8'}).trim(),f.tag);
 });
 test('new release uploads every asset while draft and publishes last',t=>{
- const {result,calls,sha}=publication(t);assert.equal(result.status,0,result.stderr);assert.deepEqual(calls.map(c=>c[1]),['view','create','upload','edit']);assert.ok(calls[1].includes('--draft'));assert.equal(calls[1][calls[1].indexOf('--target')+1],sha);for(const asset of ['dist/Rich Markdown Diff.app.zip','dist/rich-markdown-diff-source.zip','dist/SHA256SUMS'])assert.ok(calls[2].includes(asset));assert.ok(calls[3].includes('--draft=false'));
+ const {result,calls,sha}=publication(t);assert.equal(result.status,0,result.stderr);assert.deepEqual(calls.map(c=>c[1]),['view','create','upload','edit']);assert.ok(calls[1].includes('--draft'));assert.equal(calls[1][calls[1].indexOf('--target')+1],sha);for(const asset of ['dist/Rich-Markdown-Diff-macos-arm64.app.zip','dist/rich-markdown-diff-source.zip','dist/SHA256SUMS'])assert.ok(calls[2].includes(asset));assert.ok(calls[3].includes('--draft=false'));
 });
 test('rerun of a published release preserves existing immutable assets',t=>{
  const {result,calls}=publication(t,{mode:'published'});assert.equal(result.status,0,result.stderr);assert.deepEqual(calls.map(c=>c[1]),['view']);

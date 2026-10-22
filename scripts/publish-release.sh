@@ -9,7 +9,7 @@ if [[ ! "$TAG" =~ ^[0-9]{6}-[0-9a-f]{7,40}$ ]] || [[ "$TAG" != "$(bash scripts/r
   echo 'Release tag and checked-out commit must match the workflow commit.' >&2
   exit 1
 fi
-ASSETS=('dist/Rich Markdown Diff.app.zip' 'dist/rich-markdown-diff-source.zip' 'dist/SHA256SUMS')
+ASSETS=('dist/Rich-Markdown-Diff-macos-arm64.app.zip' 'dist/rich-markdown-diff-source.zip' 'dist/SHA256SUMS')
 for asset in "${ASSETS[@]}"; do test -s "$asset"; done
 METADATA="$RUNNER_TEMP/rmd-release-$TAG.json"
 NOTES="$RUNNER_TEMP/rmd-release-$TAG.md"
@@ -21,7 +21,7 @@ const release=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
 if(release.targetCommitish!==process.argv[3])throw Error('Existing release targets a different commit.');
 if(!release.isDraft){
   const names=new Set(release.assets.map(asset=>asset.name));
-  for(const name of ['Rich Markdown Diff.app.zip','rich-markdown-diff-source.zip','SHA256SUMS'])
+  for(const name of ['Rich-Markdown-Diff-macos-arm64.app.zip','rich-markdown-diff-source.zip','SHA256SUMS'])
     if(!names.has(name))throw Error('Published release is missing asset: '+name);
 }
 console.log(release.isDraft?'draft':'published');
@@ -36,7 +36,7 @@ else
 ## Rich Markdown Diff — $TAG
 
 - Commit: $GITHUB_SHA
-- Download **Rich Markdown Diff.app.zip**, extract it, and move the app to Applications.
+- Download **Rich-Markdown-Diff-macos-arm64.app.zip**, extract it, and move the app to Applications.
 - Requires Apple Silicon (M1 or later), macOS 14+, and a working /usr/bin/git.
 - Node.js and Python are not needed to run the app.
 - This build is ad-hoc signed; Developer ID signing and Apple notarization are not included.

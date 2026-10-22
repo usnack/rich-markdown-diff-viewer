@@ -11,9 +11,9 @@ if ! git diff --quiet || ! git diff --cached --quiet || [[ -n "$(git ls-files --
   exit 1
 fi
 codesign --verify --deep --strict "$APP"
-ditto -c -k --sequesterRsrc --keepParent "$APP" "$PWD/dist/Rich Markdown Diff.app.zip"
+ditto -c -k --sequesterRsrc --keepParent "$APP" "$PWD/dist/Rich-Markdown-Diff-macos-arm64.app.zip"
 git archive --format=zip --prefix=rich-markdown-diff-viewer/ --output="$PWD/dist/rich-markdown-diff-source.zip" HEAD
-(cd dist && shasum -a 256 'Rich Markdown Diff.app.zip' rich-markdown-diff-source.zip > SHA256SUMS)
-unzip -tq 'dist/Rich Markdown Diff.app.zip'
+(cd dist && shasum -a 256 'Rich-Markdown-Diff-macos-arm64.app.zip' rich-markdown-diff-source.zip > SHA256SUMS)
+unzip -tq 'dist/Rich-Markdown-Diff-macos-arm64.app.zip'
 unzip -tq dist/rich-markdown-diff-source.zip
 echo "패키지: $PWD/dist"

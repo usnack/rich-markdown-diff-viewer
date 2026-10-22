@@ -67,7 +67,7 @@ jobs:
         with:
           name: rich-markdown-diff-macos-arm64-${{ steps.metadata.outputs.tag }}
           path: |
-            dist/Rich Markdown Diff.app.zip
+            dist/Rich-Markdown-Diff-macos-arm64.app.zip
             dist/rich-markdown-diff-source.zip
             dist/SHA256SUMS
           if-no-files-found: error

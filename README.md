@@ -92,7 +92,7 @@ npm run build
 open "dist/Rich Markdown Diff.app"
 ```
 
-공유용 앱 ZIP과 커밋된 소스 ZIP은 변경을 커밋한 뒤 `npm run package`로 생성합니다. 출력은 `dist/Rich Markdown Diff.app.zip`, `dist/rich-markdown-diff-source.zip`, `dist/SHA256SUMS`입니다. 소스 압축본은 현재 Git 커밋을 기준으로 만듭니다.
+공유용 앱 ZIP과 커밋된 소스 ZIP은 변경을 커밋한 뒤 `npm run package`로 생성합니다. 출력은 `dist/Rich-Markdown-Diff-macos-arm64.app.zip`, `dist/rich-markdown-diff-source.zip`, `dist/SHA256SUMS`입니다. 소스 압축본은 현재 Git 커밋을 기준으로 만듭니다.
 
 기존 프로젝트의 스킬 연결은 `npm run fetch-project-skills`로 실행합니다.
 

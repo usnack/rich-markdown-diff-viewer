@@ -37,9 +37,11 @@ npm run package
 
 GitHub Release에 다음 세 파일을 첨부합니다.
 
-- `Rich Markdown Diff.app.zip`: Apple Silicon macOS 14 이상용 앱. 압축을 풀고 응용 프로그램 폴더로 옮겨 실행합니다.
+- `Rich-Markdown-Diff-macos-arm64.app.zip`: Apple Silicon macOS 14 이상용 앱. 압축을 풀고 응용 프로그램 폴더로 옮겨 실행합니다.
 - `rich-markdown-diff-source.zip`: 빌드한 커밋의 소스.
 - `SHA256SUMS`: 다운로드한 ZIP 파일의 SHA-256 체크섬.
+
+GitHub가 업로드 파일명의 공백을 정규화하므로 배포 자산의 파일명은 공백 없는 ASCII 이름으로 고정합니다. 앱 ZIP 내부의 `.app` 이름은 `Rich Markdown Diff.app`입니다.
 
 세 파일을 같은 폴더에 내려받고 그 폴더에서 검증합니다.
 
@@ -59,6 +61,6 @@ shasum -a 256 -c SHA256SUMS
 
 ## 확인한 범위
 
-로컬에서 워크플로 정적 검사, 태그의 날짜·시간대 계산, 게시 순서·재시도·실패 처리를 모의 GitHub CLI로 검사합니다. 실제 GitHub Actions 러너에서의 실행과 실제 GitHub Release 생성·첨부는 이 문서 작성 작업에서 수행하지 않았습니다.
+로컬에서 워크플로 정적 검사, 태그의 날짜·시간대 계산, 게시 순서·재시도·실패 처리를 모의 GitHub CLI로 검사합니다. 각 배포의 실제 성공 여부는 Actions 실행 결과와 공개된 Release의 첨부 파일로 확인합니다. 배포 후에는 첨부 파일을 직접 다운로드해 `SHA256SUMS` 검증도 수행합니다.
 
 공식 문서: [러너 사양](https://docs.github.com/en/actions/reference/runners/github-hosted-runners), [릴리스 API의 권한 조건](https://docs.github.com/en/rest/releases/releases#create-a-release), [GitHub CLI release](https://cli.github.com/manual/gh_release_create), [Actions artifact](https://github.com/actions/upload-artifact).
