@@ -3,7 +3,8 @@ import Darwin
 
 struct AppError: LocalizedError { let message: String; var errorDescription: String? { message } }
 struct Change: Codable { var path: String; var oldPath: String; var status: String; var staged: Bool = false; var unstaged: Bool = false; var id: String { path } }
-struct Snapshot: Codable { var before: String; var after: String; var beforeLabel: String; var afterLabel: String; var assets: [String: [String: String]]; var error: String? }
+struct CommitSummary: Codable { var id: String; var shortID: String; var date: String; var subject: String }
+struct Snapshot: Codable { var before: String; var after: String; var beforeLabel: String; var afterLabel: String; var assets: [String: [String: String]]; var error: String?; var beforeVersion: String? = nil }
 final class Git {
     let root: URL
     init(_ folder: URL) throws {
@@ -40,7 +41,28 @@ final class Git {
     }
     func run(_ args: [String]) throws -> Data { try Self.run(root, args) }
     var hasHead: Bool { (try? run(["rev-parse", "--verify", "HEAD"])) != nil }
-    func list(_ mode: String) throws -> [Change] {
+    func resolveCommit(_ input: String) throws -> String {
+        let revision = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !revision.isEmpty, revision.utf8.count <= 512, !revision.contains("\0") else { throw AppError(message: "커밋 해시나 참조를 입력하세요.") }
+        do {
+            let data = try run(["rev-parse", "--verify", "--end-of-options", revision + "^{commit}"])
+            let sha = String(decoding: data, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
+            guard sha.range(of: "^[0-9a-f]{40}([0-9a-f]{24})?$", options: .regularExpression) != nil else { throw AppError(message: "invalid commit") }
+            return sha
+        } catch { throw AppError(message: "커밋을 찾을 수 없습니다. 이 저장소의 유효한 해시·태그·참조인지 확인하세요.") }
+    }
+    func commits(limit: Int = 200) throws -> [CommitSummary] {
+        let data = try run(["log", "--all", "--date-order", "--no-show-signature", "--no-notes", "--no-decorate", "--no-color", "--max-count=\(min(500, max(1, limit)))", "--encoding=UTF-8", "-z", "--format=%H%x00%h%x00%cs%x00%s"])
+        if data.isEmpty { return [] }
+        guard let text = String(data: data, encoding: .utf8) else { throw AppError(message: "UTF-8 커밋 정보를 읽지 못했습니다.") }
+        var fields = text.components(separatedBy: "\0")
+        if fields.last == "" { fields.removeLast() }
+        guard fields.count % 4 == 0 else { throw AppError(message: "커밋 목록 형식을 읽지 못했습니다. 해시를 직접 입력할 수 있습니다.") }
+        return stride(from: 0, to: fields.count, by: 4).map { i in CommitSummary(id: fields[i], shortID: fields[i + 1], date: fields[i + 2], subject: fields[i + 3]) }
+    }
+    func list(_ mode: String, baseCommit: String? = nil) throws -> [Change] {
+        guard ["total", "unstaged", "staged", "commit"].contains(mode) else { throw AppError(message: "지원하지 않는 비교 기준입니다.") }
+        let baseline = mode == "commit" ? try resolveCommit(baseCommit ?? "") : nil
         let head = hasHead
         var records: [Change] = []
         if mode == "total" && !head {
@@ -49,6 +71,7 @@ final class Git {
             var args = ["diff", "--no-ext-diff", "--no-textconv", "--name-status", "-z", "-M"]
             if mode == "staged" { args.append("--cached") }
             else if mode == "total" { args.append("HEAD") }
+            else if let baseline { args.append(baseline) }
             args.append("--")
             let values = try fields(run(args)); var i = 0
             while i < values.count {
@@ -59,12 +82,22 @@ final class Git {
                 records.append(Change(path: path, oldPath: old, status: status))
             }
         }
+        var untracked = Set<String>()
         if mode != "staged" {
-            records += try fields(run(["ls-files", "--others", "--exclude-standard", "-z"])).map { Change(path: $0, oldPath: $0, status: "?") }
+            untracked = Set(try fields(run(["ls-files", "--others", "--exclude-standard", "-z"])).filter(Self.markdown))
+            let previousPaths = Set(records.map { $0.oldPath })
+            for path in untracked {
+                if let baseline, previousPaths.contains(path), let historical = try? blob(path, "commit:" + baseline) {
+                    // A path removed from the index may exist again as an untracked file.
+                    records.removeAll { $0.path == path && $0.status == "D" }
+                    if let current = try? blob(path, "work"), current == historical { continue }
+                    records.append(Change(path: path, oldPath: path, status: "M"))
+                } else { records.append(Change(path: path, oldPath: path, status: "?")) }
+            }
         }
         let stagedPaths = Set(try fields(run(["diff", "--cached", "--name-only", "-z", "--"])))
         let workPaths = Set(try fields(run(["diff", "--name-only", "-z", "--"])))
-        for i in records.indices { records[i].staged = stagedPaths.contains(records[i].path); records[i].unstaged = workPaths.contains(records[i].path) || records[i].status == "?" }
+        for i in records.indices { records[i].staged = stagedPaths.contains(records[i].path); records[i].unstaged = workPaths.contains(records[i].path) || untracked.contains(records[i].path) }
         var seen = Set<String>()
         return records.filter { (Self.markdown($0.path) || Self.markdown($0.oldPath)) && seen.insert($0.path).inserted }.sorted { $0.path.localizedStandardCompare($1.path) == .orderedAscending }
     }
@@ -85,21 +118,27 @@ final class Git {
             return try Data(contentsOf: url)
         }
         if version == "head" && !hasHead { return nil }
-        let listing = try run(version == "head" ? ["ls-tree", "-z", "HEAD", "--", path] : ["ls-files", "--stage", "-z", "--", path])
+        let reference: String?
+        if version == "head" { reference = "HEAD" }
+        else if version == "index" { reference = nil }
+        else if version.hasPrefix("commit:") { reference = try resolveCommit(String(version.dropFirst(7))) }
+        else { throw AppError(message: "지원하지 않는 파일 시점입니다.") }
+        let listing = try run(reference.map { ["ls-tree", "-z", $0, "--", path] } ?? ["ls-files", "--stage", "-z", "--", path])
         guard !listing.isEmpty else { return nil }
         let mode = String(decoding: listing.prefix(6), as: UTF8.self)
         guard mode != "120000" && mode != "160000" else { throw AppError(message: "과거 시점의 심볼릭 링크/서브모듈은 읽지 않습니다: \(path)") }
-        return try run(["show", (version == "head" ? "HEAD:" : ":") + path])
+        return try run(["show", (reference.map { $0 + ":" } ?? ":") + path])
     }
     func text(_ path: String, _ version: String) throws -> String {
         guard let data = try blob(path, version) else { return "" }
         guard data.count <= 4 * 1024 * 1024 else { throw AppError(message: "문서가 4MB를 초과했습니다.") }
         guard !data.contains(0), let str = String(data: data, encoding: .utf8) else { throw AppError(message: "바이너리 또는 UTF-8이 아닌 문서입니다.") }; return str
     }
-    func snapshot(_ change: Change, _ mode: String) throws -> Snapshot {
-        let bv = mode == "unstaged" ? "index" : "head"; let av = mode == "staged" ? "index" : "work"
+    func snapshot(_ change: Change, _ mode: String, baseCommit: String? = nil) throws -> Snapshot {
+        let commit = mode == "commit" ? try resolveCommit(baseCommit ?? "") : nil
+        let bv = commit.map { "commit:" + $0 } ?? (mode == "unstaged" ? "index" : "head"); let av = mode == "staged" ? "index" : "work"
         let before = try text(change.oldPath, bv); let after = try text(change.path, av)
-        return Snapshot(before: before, after: after, beforeLabel: bv.uppercased(), afterLabel: av.uppercased(), assets: ["before": assets(before, change.oldPath, bv), "after": assets(after, change.path, av)], error: nil)
+        return Snapshot(before: before, after: after, beforeLabel: commit.map { "COMMIT " + $0.prefix(12) } ?? bv.uppercased(), afterLabel: av.uppercased(), assets: ["before": assets(before, change.oldPath, bv), "after": assets(after, change.path, av)], error: nil, beforeVersion: commit.map { "COMMIT:" + $0 })
     }
     func assets(_ text: String, _ doc: String, _ version: String) -> [String: String] {
         // Include inline, reference-style and HTML image destinations; harmless non-image destinations are ignored.

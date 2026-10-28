@@ -3,12 +3,14 @@ import {sanitize} from './sanitize.js';
 import mermaid from 'mermaid';
 import {createFileTree} from './tree.js';
 import {createComments} from './comments-ui.js';
+import {createCommitPicker} from './commit-picker.js';
 const $=id=>document.getElementById(id);
 const send=(action,value)=>document.dispatchEvent(new CustomEvent('rmd-command',{detail:JSON.stringify({action,value})}));
 let state={},rows=[],layout='unified',only=false,paused=false,active=-1,renderVersion=0,userScroll=0,ready=false,readingAnchor=null,sideStyles={before:'',after:''};
 const viewport=$('viewport');
 const fileTree=createFileTree($('files'),path=>send('file',path));
 const commentUI=createComments({getState:()=>state,send});
+const commitPicker=createCommitPicker({send});
 viewport.addEventListener('scroll',()=>{readingAnchor=capture();},{passive:true});
 viewport.addEventListener('wheel',()=>userScroll++,{passive:true});viewport.addEventListener('pointerdown',()=>userScroll++,{passive:true});viewport.addEventListener('touchstart',()=>userScroll++,{passive:true});viewport.addEventListener('keydown',()=>userScroll++);
 mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'neutral',suppressErrorRendering:true,fontFamily:'-apple-system, sans-serif',flowchart:{htmlLabels:false},maxTextSize:50000,maxEdges:500});
@@ -115,12 +117,12 @@ function draw(preserve=true) {
 }
 window.receive=payload=>{
   try{
-    const preserve=state.repo===payload.repo&&state.selected===payload.selected&&state.mode===payload.mode;
+    const preserve=state.repo===payload.repo&&state.selected===payload.selected&&state.mode===payload.mode&&state.baseCommit===payload.baseCommit;
     state=payload;layout=payload.layout||layout;only=payload.only??only;
-    $('repository').textContent=payload.repo||'로컬 저장소';$('repository').title=payload.repo||'';$('mode').value=payload.mode||'total';$('file-count').textContent=payload.files.length;
+    $('repository').textContent=payload.repo||'로컬 저장소';$('repository').title=payload.repo||'';$('mode').value=payload.mode||'total';$('file-count').textContent=payload.files.length;commitPicker.update(payload);
     fileTree.render(payload.files,payload.selected,payload.repo);$('filename').textContent=payload.selected||'문서를 선택하세요';$('versions').textContent=payload.snapshot?payload.snapshot.beforeLabel+' → '+payload.snapshot.afterLabel:'';
     $('empty').style.display=payload.snapshot?'none':'block';$('empty-open').style.display=payload.repo?'none':'inline-block';
-    if(!payload.snapshot){$('empty').querySelector('h1').textContent=payload.error?'문서를 읽을 수 없습니다':payload.missing?'선택한 파일의 변경이 없습니다':payload.repo?'변경된 마크다운이 없습니다':'문서의 변화를 한눈에';$('empty').querySelector('p').textContent=payload.error|| (payload.missing?'파일이 삭제·이동되었거나 이 비교 기준에 변경이 없습니다. 왼쪽에서 다른 문서를 선택하세요.':payload.repo?'문서를 저장하면 변경 내용이 자동으로 나타납니다.':'로컬 Git 저장소를 열어 마크다운 변경을 살펴보세요.');}
+    if(!payload.snapshot){$('empty').querySelector('h1').textContent=payload.chooseCommit?'비교할 커밋을 선택하세요':payload.error?'문서를 읽을 수 없습니다':payload.missing?'선택한 파일의 변경이 없습니다':payload.repo?'변경된 마크다운이 없습니다':'문서의 변화를 한눈에';$('empty').querySelector('p').textContent=payload.error|| (payload.chooseCommit?'왼쪽의 커밋 목록에서 선택하거나 커밋 해시·태그·참조를 입력하세요.':payload.missing?'파일이 삭제·이동되었거나 이 비교 기준에 변경이 없습니다. 왼쪽에서 다른 문서를 선택하세요.':payload.repo?'문서를 저장하면 변경 내용이 자동으로 나타납니다.':'로컬 Git 저장소를 열어 마크다운 변경을 살펴보세요.');}
     rows=payload.snapshot?compare(payload.snapshot.before,payload.snapshot.after):[];
     sideStyles={before:'',after:''};
     for(const side of ['before','after']) {
@@ -168,6 +170,7 @@ window.verifyApp=async()=>{
  if(state.selected!==original){send('file',original);await sleep(2000);}
  $('pause').click();check('pause button',paused);$('pause').click();await sleep(1500);check('resume button',!paused);
  $('split').click();await sleep(2500);
+ await verifyCommitComparison(check);
  await verifyReviewFeatures(check);
  return {checks,failures:checks.filter(c=>!c.pass),state:{repo:state.repo,selected:state.selected,mode:state.mode,layout},timestamp:new Date().toISOString()};
 };
@@ -193,7 +196,7 @@ window.workflowRapid=async()=>{
 };
 window.workflowIndexStart=()=>{$('mode').value='staged';$('mode').dispatchEvent(new Event('change'));return true;};
 window.workflowIndexCheck=()=>({mode:state.mode,stagedUpdated:state.snapshot?.after?.includes('자동 갱신 검증용 추가 문단')});
-window.workflowEnd=()=>{$('mode').value='total';$('mode').dispatchEvent(new Event('change'));$('split').click();if($('comment-panel').hidden)$('comments-toggle').click();$('comment-compose').open=false;viewport.scrollTop=0;return {selected:state.selected,layout};};
+window.workflowEnd=()=>{$('mode').value=window.commitVerificationBase?'commit':'total';$('mode').dispatchEvent(new Event('change'));$('split').click();if($('comment-panel').hidden)$('comments-toggle').click();$('comment-compose').open=false;viewport.scrollTop=0;return {selected:state.selected,layout};};
 
 async function verifyReviewFeatures(check) {
  const waitFor=async(predicate)=>{for(let i=0;i<60;i++){if(predicate())return true;await sleep(100);}return false;};
@@ -213,12 +216,49 @@ async function verifyReviewFeatures(check) {
  check('exact source line range and excerpt',first?.startLine===7&&first?.endLine===10&&first?.excerpt===state.snapshot.after.split('\n').slice(6,10).join('\n'));
  const another=[...document.querySelectorAll('.comment-card button')].find(b=>b.textContent==='같은 범위에 추가');another?.click();$('comment-body').value='second comment';$('comment-body').dispatchEvent(new Event('input'));$('comment-submit').click();
  check('multiple comments on identical lines',await waitFor(()=>state.comments?.length===2)&&state.comments.every(c=>c.startLine===7&&c.endLine===10));
- const copy=[...document.querySelectorAll('.comment-card button')].find(b=>b.textContent==='복사');copy?.click();
+ const byID=id=>[...document.querySelectorAll('.comment-card')].find(card=>card.dataset.id===id);
+ const status=id=>state.comments.find(c=>c.id===id)?.status;
+ const copyCard=id=>[...byID(id).querySelectorAll('button')].find(b=>b.textContent==='복사').click();
+ const firstID=state.comments[0].id,secondID=state.comments[1].id;
+ check('new comment status labels are pending',state.comments.every(c=>c.status==='pending')&&[...document.querySelectorAll('.comment-status')].every(e=>e.textContent==='처리 전'));
+ copyCard(firstID);
  check('individual copy acknowledged',await waitFor(()=>$('comments-message').textContent==='코멘트를 복사했습니다.'));
+ check('individual copy marks only the selected comment in progress',status(firstID)==='inProgress'&&status(secondID)==='pending');
+ copyCard(secondID);await waitFor(()=>$('comments-message').textContent==='코멘트를 복사했습니다.'&&!$('comments-copy-all').disabled);
+ check('last individually copied comment owns in-progress status',await waitFor(()=>status(secondID)==='inProgress'&&status(firstID)==='pending'));
+ byID(firstID).querySelector('.comment-resolve').click();
+ check('Resolve completes a comment and updates its label',await waitFor(()=>status(firstID)==='resolved'&&byID(firstID).querySelector('.comment-status').textContent==='완료'&&$('comments-message').textContent==='완료로 변경했습니다.'));
  $('comments-copy-all').click();check('copy all acknowledged',await waitFor(()=>$('comments-message').textContent==='2개 코멘트를 복사했습니다.'));
- const original=state.selected;const other=state.files.find(f=>f.path!==original);if(other){send('file',other.path);await waitFor(()=>state.selected===other.path);check('comments scoped to current document',state.comments.length===0);send('file',original);await waitFor(()=>state.selected===original);check('comments restored on file return',state.comments.length===2);}
+ check('copy all preserves resolved and progresses unfinished',status(firstID)==='resolved'&&status(secondID)==='inProgress');
+ copyCard(firstID);await waitFor(()=>$('comments-message').textContent==='코멘트를 복사했습니다.'&&!$('comments-copy-all').disabled);
+ check('copying a resolved comment reopens it and resets the other unfinished comment',await waitFor(()=>status(firstID)==='inProgress'&&status(secondID)==='pending'));
+ byID(firstID).querySelector('.comment-resolve').click();await waitFor(()=>$('comments-message').textContent==='완료로 변경했습니다.');
+ $('comments-copy-all').click();await waitFor(()=>$('comments-message').textContent==='2개 코멘트를 복사했습니다.');
+ const original=state.selected;const other=state.files.find(f=>f.path!==original);if(other){send('file',other.path);await waitFor(()=>state.selected===other.path);check('comments scoped to current document',state.comments.length===0);send('file',original);await waitFor(()=>state.selected===original);check('comments restored on file return',state.comments.length===2);check('comment statuses retained when changing files',status(firstID)==='resolved'&&status(secondID)==='inProgress');}
  check('comment cards use raw text',document.querySelectorAll('.comment-card .comment-text').length===2);
  $('comments-close').click();
 }
 
 window.inspectReviewSelection=async()=>{const checks=[];await verifyReviewFeatures((name,pass,detail)=>checks.push({name,pass:!!pass,detail:detail??''}));return {checks,failures:checks.filter(c=>!c.pass)};};
+
+async function verifyCommitComparison(check) {
+ const waitFor=async(fn)=>{for(let i=0;i<80;i++){if(fn())return true;await sleep(100);}return false;};
+ const original=state.selected;const hadCommitted=state.files.some(f=>f.path==='committed-note.md');
+ const changeMode=value=>{$('mode').value=value;$('mode').dispatchEvent(new Event('change'));};
+ changeMode('commit');const historyLoaded=await waitFor(()=>state.mode==='commit'&&state.commits?.length>=2);
+ check('commit picker loads repository history',historyLoaded&&!$('commit-picker').hidden);
+ const commit=state.commits?.at(-1);if(!commit){changeMode('total');return;}
+ $('commit-history').value=commit.id;$('commit-history').dispatchEvent(new Event('change'));
+ const loaded=await waitFor(()=>state.baseCommit===commit.id&&state.snapshot?.beforeVersion==='COMMIT:'+commit.id&&!$('commit-input').disabled);
+ check('selected historical commit replaces HEAD baseline',loaded&&commit.id!==state.commits[0].id);
+ check('custom comparison includes already committed changes',!hadCommitted&&state.files.some(f=>f.path==='committed-note.md'));
+ const before=state.snapshot?.before;
+ $('commit-input').value='does-not-exist';$('commit-input').dispatchEvent(new Event('input'));$('commit-apply').click();
+ check('invalid commit preserves the prior comparison',await waitFor(()=>$('commit-message').classList.contains('error'))&&state.baseCommit===commit.id&&state.snapshot?.before===before);
+ $('commit-input').value=commit.id.slice(0,8);$('commit-input').dispatchEvent(new Event('input'));$('commit-input').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
+ check('short commit hash input resolves to a full pinned commit',await waitFor(()=>$('commit-input').value===''&&!$('commit-input').disabled)&&state.baseCommit===commit.id);
+ changeMode('total');await waitFor(()=>state.mode==='total');changeMode('commit');
+ check('custom baseline retained across comparison switches',await waitFor(()=>state.mode==='commit'&&state.baseCommit===commit.id&&!!state.snapshot));
+ window.commitVerificationBase=commit.id;
+ changeMode('total');await waitFor(()=>state.mode==='total');if(state.selected!==original){send('file',original);await waitFor(()=>state.selected===original);}
+}

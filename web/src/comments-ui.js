@@ -15,24 +15,26 @@ export function createComments({getState,send}) {
   const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
   let payload={},comments=[],scope='',context='',draftContext='',side='after',range={start:1,end:1},pivot=1,editing=null,busy=false,pending=null;
   const drafts=new Map();
-  const version=which=>which==='before'?payload.snapshot?.beforeLabel:payload.snapshot?.afterLabel;
+  const version=which=>which==='before'?(payload.snapshot?.beforeVersion??payload.snapshot?.beforeLabel):payload.snapshot?.afterLabel;
+  const compactVersion=value=>value?.startsWith('COMMIT:')?'커밋 '+value.slice(7,19):value;
   const source=()=>side==='before'?payload.snapshot?.before??'':payload.snapshot?.after??'';
   const notify=(text,error=false)=>{$('comments-message').textContent=text;$('comments-message').classList.toggle('error',error);};
   function show(open=true){$('comment-panel').hidden=!open;$('comments-toggle').setAttribute('aria-expanded',String(open));document.querySelector('.review-layout').classList.toggle('with-comments',open);}
-  function enabled(){const valid=!!payload.snapshot&&!payload.commentsError;const editable=!!editing||valid;const nonempty=$('comment-body').value.trim().length>0;const within=new TextEncoder().encode($('comment-body').value).length<=40000;$('comment-submit').disabled=busy||!editable||!nonempty||!within||draftContext!==context;$('comment-side').disabled=!valid||!!editing;for(const id of ['comment-start','comment-end'])$(id).disabled=!valid||!!editing;$('comments-copy-all').disabled=busy||comments.length===0||!context;}
+  function enabled(){const valid=!!payload.snapshot&&!payload.commentsError;const editable=!!editing||valid;const nonempty=$('comment-body').value.trim().length>0;const within=new TextEncoder().encode($('comment-body').value).length<=40000;$('comment-submit').disabled=busy||!editable||!nonempty||!within||draftContext!==context;$('comment-side').disabled=!valid||!!editing;for(const id of ['comment-start','comment-end'])$(id).disabled=!valid||!!editing;$('comments-copy-all').disabled=busy||comments.length===0||!context;for(const button of document.querySelectorAll('.comment-resolve'))button.disabled=busy||button.closest('.comment-card').dataset.status==='resolved';}
   function updateRange(start,end,confirm=true){range=normalizeRange(start,end,sourceLines(source()).length);$('comment-start').value=range.start;$('comment-end').value=range.end;if(confirm)draftContext=context;
     for(const line of $('comment-source').children){const n=Number(line.dataset.line);line.classList.toggle('selected',n>=range.start&&n<=range.end);line.setAttribute('aria-pressed',String(n>=range.start&&n<=range.end));}
     $('comment-excerpt').textContent=editing?editing.excerpt:excerptAt(source(),range.start,range.end);enabled();
   }
   function renderSource(){const lines=sourceLines(source());const fragment=document.createDocumentFragment();lines.forEach((text,i)=>{const button=el('button','source-line');button.type='button';button.dataset.line=i+1;button.setAttribute('aria-label',`라인 ${i+1}: ${text}`);button.append(el('span','source-line-number',String(i+1)),el('span','source-line-text',text||' '));button.onclick=e=>{if(editing)return;if(!e.shiftKey)pivot=i+1;updateRange(e.shiftKey?pivot:i+1,i+1);notify('');};fragment.append(button);});$('comment-source').replaceChildren(fragment);$('comment-start').max=lines.length;$('comment-end').max=lines.length;
-    $('comment-side').options[0].textContent='변경 후 · '+(version('after')||'—');$('comment-side').options[1].textContent='변경 전 · '+(version('before')||'—');$('comment-side').value=side;updateRange(range.start,range.end,false);
+    $('comment-side').options[0].textContent='변경 후 · '+(compactVersion(version('after'))||'—');$('comment-side').options[1].textContent='변경 전 · '+(compactVersion(version('before'))||'—');$('comment-side').value=side;updateRange(range.start,range.end,false);
   }
   function command(action,extra={}){if(busy)return;busy=true;pending={action,context};send(action,{context,...extra});enabled();}
   function resetEdit(){editing=null;$('comment-cancel-edit').hidden=true;$('comment-submit').textContent='코멘트 추가';draftContext=context;enabled();}
   function renderList(){const fragment=document.createDocumentFragment();
     for(const comment of comments){
-      const card=el('article','comment-card');card.dataset.id=comment.id;const lineLabel=`Lines ${comment.startLine===comment.endLine?comment.startLine:comment.startLine+'–'+comment.endLine}`;
-      const header=el('div','comment-card-heading');header.append(el('strong','',lineLabel),el('span','comment-version',comment.version+' · '+(comment.side==='before'?'변경 전':'변경 후')));card.append(header);
+      const status=comment.status||'pending';const labels={pending:'처리 전',inProgress:'진행중',resolved:'완료'};
+      const card=el('article','comment-card'+(status==='resolved'?' resolved':''));card.dataset.id=comment.id;card.dataset.status=status;const lineLabel=`Lines ${comment.startLine===comment.endLine?comment.startLine:comment.startLine+'–'+comment.endLine}`;
+      const header=el('div','comment-card-heading');header.append(el('strong','',lineLabel),el('span','comment-status status-'+status,labels[status]||'처리 전'),el('span','comment-version',compactVersion(comment.version)+' · '+(comment.side==='before'?'변경 전':'변경 후')));card.append(header);
       let matchingSide=version('after')===comment.version?'after':version('before')===comment.version?'before':null;
       const currentSource=matchingSide==='after'?payload.snapshot?.after:matchingSide==='before'?payload.snapshot?.before:null;
       const stale=currentSource!==null&&currentSource!==undefined&&excerptAt(currentSource,comment.startLine,comment.endLine)!==comment.excerpt;
@@ -40,9 +42,10 @@ export function createComments({getState,send}) {
       else if(!matchingSide)card.append(el('p','comment-stale','이 비교에 없는 시점 · 작성 당시 인용 유지'));
       const quote=el('details','comment-quote');quote.append(el('summary','',comment.file),el('pre','',comment.excerpt));card.append(quote,el('p','comment-text',comment.body));
       const actions=el('div','comment-card-actions');
+      const resolve=el('button','comment-resolve',status==='resolved'?'Resolved':'Resolve');resolve.disabled=status==='resolved'||busy;resolve.title='코멘트를 완료로 변경';resolve.onclick=()=>command('commentResolve',{id:comment.id});
       const copy=el('button','', '복사');copy.onclick=()=>command('commentCopy',{id:comment.id});
       const edit=el('button','','수정');edit.onclick=()=>{show();$('comment-compose').open=true;editing=comment;side=matchingSide||'after';range={start:comment.startLine,end:comment.endLine};draftContext=context;$('comment-body').value=comment.body;$('comment-cancel-edit').hidden=false;$('comment-submit').textContent='수정 저장';renderSource();$('comment-excerpt').textContent=comment.excerpt;$('comment-body').focus();notify('코멘트 내용만 수정합니다.');};
-      const remove=el('button','comment-delete','삭제');remove.onclick=()=>command('commentDelete',{id:comment.id});const another=el('button','','같은 범위에 추가');another.disabled=!matchingSide||stale;another.onclick=()=>open(matchingSide,comment.startLine,comment.endLine);actions.append(another,copy,edit,remove);card.append(actions);fragment.append(card);
+      const remove=el('button','comment-delete','삭제');remove.onclick=()=>command('commentDelete',{id:comment.id});const another=el('button','','같은 범위에 추가');another.disabled=!matchingSide||stale;another.onclick=()=>open(matchingSide,comment.startLine,comment.endLine);actions.append(another,copy,resolve,edit,remove);card.append(actions);fragment.append(card);
     }
     if(!comments.length)fragment.append(el('p','comments-empty','아직 코멘트가 없습니다. 본문의 + 코멘트 버튼이나 원문 라인 선택으로 추가하세요.'));
     $('comment-list').replaceChildren(fragment);$('comment-count').textContent=comments.length;$('panel-comment-count').textContent=comments.length;enabled();
@@ -81,6 +84,7 @@ export function createComments({getState,send}) {
   window.receiveComments=data=>{if(data.context!==context)return;comments=data.comments||[];payload.comments=comments;payload.commentsError=data.commentsError;renderList();};
   window.receiveCommentResult=result=>{if(result.context!==context)return;busy=false;if(!result.ok){notify(result.error||'처리하지 못했습니다.',true);enabled();return;}
     if(result.action==='commentAdd'||result.action==='commentEdit'){$('comment-body').value='';resetEdit();$('comment-compose').open=false;notify(result.action==='commentAdd'?'코멘트를 추가했습니다.':'수정했습니다.');}
+    else if(result.action==='commentResolve')notify('완료로 변경했습니다.');
     else if(result.action==='commentDelete'){if(editing?.id===result.id){$('comment-body').value='';resetEdit();}notify('코멘트를 삭제했습니다.');}
     else notify(result.action==='commentsCopy'?`${result.count}개 코멘트를 복사했습니다.`:'코멘트를 복사했습니다.');pending=null;enabled();};
   return {update,attach,open,refresh:renderList};

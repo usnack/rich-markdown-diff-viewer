@@ -6,8 +6,15 @@ def add_tree_fixtures():
  for relative in ['02-단원-기획/src/03-개발환경/01-리눅스.md','02-단원-기획/src/03-개발환경/02-프로그래밍.md','docs/참고 문서.md']:
   p=root/relative;p.parent.mkdir(parents=True,exist_ok=True)
   if not p.exists():p.write_text('# '+p.stem+'\n\n디렉터리 트리에서 문서의 위치를 확인합니다.\n')
+def ensure_commit_fixture():
+ check=subprocess.run(['git','-C',str(root),'cat-file','-e','HEAD:committed-note.md'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+ if check.returncode:
+  (root/'committed-note.md').write_text('# 커밋된 문서\n\nHEAD에는 있지만 이전 커밋에는 없는 문서입니다.\n')
+  subprocess.run(['git','-C',str(root),'add','--','committed-note.md'],check=True,stdout=subprocess.DEVNULL)
+  subprocess.run(['git','-C',str(root),'commit','--only','-qm','Add committed-only comparison fixture','--','committed-note.md'],check=True,stdout=subprocess.DEVNULL)
 if (root/'.git').exists():
- if (root/'.rmd-demo').exists():add_tree_fixtures()
+ if (root/'.rmd-demo').exists():
+  add_tree_fixtures();ensure_commit_fixture()
  print(root);sys.exit(0)
 def git(*args):subprocess.run(['git','-C',str(root),*args],check=True,stdout=subprocess.DEVNULL)
 def png(color):
@@ -87,4 +94,5 @@ flowchart LR
 (root/'무시.md').write_text('목록에 나타나면 안 됩니다.')
 add_tree_fixtures()
 (root/'.rmd-demo').write_text('Rich Markdown Diff verification fixture')
+ensure_commit_fixture()
 print(root)

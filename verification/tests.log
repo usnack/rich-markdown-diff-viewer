@@ -6,120 +6,192 @@ TAP version 13
 # Subtest: line ranges normalize, preserve raw Markdown and CRLF
 ok 1 - line ranges normalize, preserve raw Markdown and CRLF
   ---
-  duration_ms: 0.692959
-  type: 'test'
+  duration_ms: 1.179375
   ...
 # Subtest: source maps keep before/after positions independent of inserted blocks
 ok 2 - source maps keep before/after positions independent of inserted blocks
   ---
-  duration_ms: 6.133292
-  type: 'test'
+  duration_ms: 11.89025
   ...
 # Subtest: source line click and shift-click submit exact range with multiple comments permitted
 ok 3 - source line click and shift-click submit exact range with multiple comments permitted
   ---
-  duration_ms: 43.592833
-  type: 'test'
+  duration_ms: 77.564125
   ...
 # Subtest: comment body renders as text and exposes individual/all copy commands
 ok 4 - comment body renders as text and exposes individual/all copy commands
   ---
-  duration_ms: 8.652833
-  type: 'test'
+  duration_ms: 16.172792
   ...
 # Subtest: live source changes retain draft and require an explicit new line choice
 ok 5 - live source changes retain draft and require an explicit new line choice
   ---
-  duration_ms: 7.935041
-  type: 'test'
+  duration_ms: 15.905
   ...
 # Subtest: document switches isolate comments and restore an unfinished draft
 ok 6 - document switches isolate comments and restore an unfinished draft
   ---
-  duration_ms: 6.754584
-  type: 'test'
+  duration_ms: 9.624084
   ...
 # Subtest: WebKit composed selection maps lines even when public selection appears collapsed
 ok 7 - WebKit composed selection maps lines even when public selection appears collapsed
   ---
-  duration_ms: 4.286583
-  type: 'test'
+  duration_ms: 5.353667
+  ...
+# Subtest: comments distinguish full commit IDs even when their displayed prefixes match
+ok 8 - comments distinguish full commit IDs even when their displayed prefixes match
+  ---
+  duration_ms: 9.972458
+  ...
+# Subtest: legacy cards show pending status and Resolve updates only after native confirmation
+ok 9 - legacy cards show pending status and Resolve updates only after native confirmation
+  ---
+  duration_ms: 9.803458
+  ...
+# Subtest: each card renders its independent pending, in-progress or resolved status
+ok 10 - each card renders its independent pending, in-progress or resolved status
+  ---
+  duration_ms: 11.756125
+  ...
+# Subtest: copy failure preserves displayed statuses and shows the error
+ok 11 - copy failure preserves displayed statuses and shows the error
+  ---
+  duration_ms: 15.351375
+  ...
+# Subtest: commit mode exposes history, legacy modes keep selector hidden
+ok 12 - commit mode exposes history, legacy modes keep selector hidden
+  ---
+  duration_ms: 59.663
+  ...
+# Subtest: history sends exact commit ID and prevents parallel selections
+ok 13 - history sends exact commit ID and prevents parallel selections
+  ---
+  duration_ms: 15.133792
+  ...
+# Subtest: invalid typed revision leaves prior baseline and retains input for correction
+ok 14 - invalid typed revision leaves prior baseline and retains input for correction
+  ---
+  duration_ms: 9.468125
+  ...
+# Subtest: a selected older commit outside the recent list remains visible
+ok 15 - a selected older commit outside the recent list remains visible
+  ---
+  duration_ms: 9.282125
+  ...
+# Subtest: history refresh preserves typed input and ignores stale responses after repository change
+ok 16 - history refresh preserves typed input and ignores stale responses after repository change
+  ---
+  duration_ms: 7.405667
+  ...
+# Subtest: switching comparison mode cancels a pending selection without locking the picker
+ok 17 - switching comparison mode cancels a pending selection without locking the picker
+  ---
+  duration_ms: 11.331792
   ...
 # Subtest: Korean and grapheme clusters remain intact
-ok 8 - Korean and grapheme clusters remain intact
+ok 18 - Korean and grapheme clusters remain intact
   ---
-  duration_ms: 11.053917
-  type: 'test'
+  duration_ms: 13.629709
   ...
 # Subtest: format-only and reference destination changes stay visible
-ok 9 - format-only and reference destination changes stay visible
+ok 19 - format-only and reference destination changes stay visible
   ---
-  duration_ms: 8.778
-  type: 'test'
+  duration_ms: 17.593209
   ...
 # Subtest: table AST structure survives cell edit
-ok 10 - table AST structure survives cell edit
+ok 20 - table AST structure survives cell edit
   ---
-  duration_ms: 2.466042
-  type: 'test'
+  duration_ms: 4.564666
   ...
 # Subtest: lists, tasks, HTML, Mermaid, code retain structures
-ok 11 - lists, tasks, HTML, Mermaid, code retain structures
+ok 21 - lists, tasks, HTML, Mermaid, code retain structures
   ---
-  duration_ms: 1.973166
-  type: 'test'
+  duration_ms: 2.410041
   ...
 # Subtest: inserted blocks do not shift identical anchors
-ok 12 - inserted blocks do not shift identical anchors
+ok 22 - inserted blocks do not shift identical anchors
   ---
-  duration_ms: 1.372791
-  type: 'test'
+  duration_ms: 2.748791
   ...
 # Subtest: whitespace and unused reference-only changes are explicit
-ok 13 - whitespace and unused reference-only changes are explicit
+ok 23 - whitespace and unused reference-only changes are explicit
   ---
-  duration_ms: 0.912625
-  type: 'test'
+  duration_ms: 1.632917
   ...
 # Subtest: added/deleted docs and HTML fallback
-ok 14 - added/deleted docs and HTML fallback
+ok 24 - added/deleted docs and HTML fallback
   ---
-  duration_ms: 1.218125
-  type: 'test'
+  duration_ms: 1.351959
+  ...
+# Subtest: release tag uses committer date in Seoul, not author date or local execution timezone
+ok 25 - release tag uses committer date in Seoul, not author date or local execution timezone
+  ---
+  duration_ms: 252.027541
+  ...
+# Subtest: new release uploads every asset while draft and publishes last
+ok 26 - new release uploads every asset while draft and publishes last
+  ---
+  duration_ms: 535.337417
+  ...
+# Subtest: rerun of a published release preserves existing immutable assets
+ok 27 - rerun of a published release preserves existing immutable assets
+  ---
+  duration_ms: 389.974167
+  ...
+# Subtest: rerun resumes an existing draft without creating another release
+ok 28 - rerun resumes an existing draft without creating another release
+  ---
+  duration_ms: 446.461208
+  ...
+# Subtest: upload failure leaves draft unpublished
+ok 29 - upload failure leaves draft unpublished
+  ---
+  duration_ms: 406.481041
+  ...
+# Subtest: published release targeting another commit is never overwritten
+ok 30 - published release targeting another commit is never overwritten
+  ---
+  duration_ms: 440.477416
+  ...
+# Subtest: incomplete published release fails instead of reporting success
+ok 31 - incomplete published release fails instead of reporting success
+  ---
+  duration_ms: 323.539208
+  ...
+# Subtest: mismatched checkout fails before contacting GitHub
+ok 32 - mismatched checkout fails before contacting GitHub
+  ---
+  duration_ms: 107.91125
   ...
 # Subtest: script, iframe, event, dangerous URLs, form attacks stripped
-ok 15 - script, iframe, event, dangerous URLs, form attacks stripped
+ok 33 - script, iframe, event, dangerous URLs, form attacks stripped
   ---
-  duration_ms: 12.516334
-  type: 'test'
+  duration_ms: 23.475792
   ...
 # Subtest: safe disclosure, table, style and checkbox retained, network CSS stripped
-ok 16 - safe disclosure, table, style and checkbox retained, network CSS stripped
+ok 34 - safe disclosure, table, style and checkbox retained, network CSS stripped
   ---
-  duration_ms: 8.981167
-  type: 'test'
+  duration_ms: 16.879916
   ...
 # Subtest: tree retains directory ancestry and duplicate basenames
-ok 17 - tree retains directory ancestry and duplicate basenames
+ok 35 - tree retains directory ancestry and duplicate basenames
   ---
-  duration_ms: 0.404834
-  type: 'test'
+  duration_ms: 0.617291
   ...
 # Subtest: folders collapse across refresh, selected path expands, selection retains exact file path
-ok 18 - folders collapse across refresh, selected path expands, selection retains exact file path
+ok 36 - folders collapse across refresh, selected path expands, selection retains exact file path
   ---
-  duration_ms: 42.230625
-  type: 'test'
+  duration_ms: 65.196875
   ...
-1..18
-# tests 18
+1..36
+# tests 36
 # suites 0
-# pass 18
+# pass 36
 # fail 0
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 295.691625
+# duration_ms 2965.027375
 PASS: unborn HEAD, untracked, Korean, spaces, newline, ignored
 PASS: unborn staged empty
 PASS: unborn staged initial content
@@ -140,7 +212,28 @@ PASS: image paths with spaces and parentheses
 PASS: image reference with spaces
 PASS: linked worktree .git file supported
 PASS: literal pathspec filename
-GIT TESTS: 20 passed
+PASS: unborn commit history is empty
+PASS: missing custom baseline rejected
+PASS: history contains UTF-8 subject and full SHA
+PASS: short hashes and annotated tags resolve to a commit
+PASS: history retains empty commit subjects
+PASS: commit list limit and parent references
+PASS: custom comparison includes committed and working changes
+PASS: custom baseline has a stable full commit version
+PASS: custom comparison includes untracked and excludes ignored
+PASS: custom comparison shows committed addition and deletion
+PASS: custom baseline retains rename paths
+PASS: custom baseline images use original path and commit bytes
+PASS: resolved commit remains pinned when a reference moves
+PASS: recreated untracked path equal to old commit is unchanged
+PASS: recreated untracked baseline path is modified, not deleted
+PASS: invalid or non-commit reference rejected
+PASS: invalid or non-commit reference rejected
+PASS: invalid or non-commit reference rejected
+PASS: invalid or non-commit reference rejected
+PASS: invalid or non-commit reference rejected
+PASS: option-like revision does not write a file
+GIT TESTS: 41 passed
 PASS: exact requested export format
 PASS: multiple comments on same range
 PASS: comments survive reloading
@@ -155,4 +248,20 @@ PASS: blank body rejected
 PASS: delete affects only chosen comment
 PASS: corrupt storage preserved
 PASS: context changes when either source changes
-COMMENT TESTS: 14 passed
+PASS: new comments start pending
+PASS: individual copy progresses only selected comment
+PASS: status never changes exported comment format
+PASS: latest individual copy resets previous unfinished comment
+PASS: resolve marks only chosen comment completed
+PASS: copy all progresses unfinished and preserves completed
+PASS: copy all retains all comments in original order
+PASS: copying completed comment reopens only it
+PASS: copy and resolve do not affect other documents or repositories
+PASS: editing preserves completed status
+PASS: failed clipboard write leaves status unchanged
+PASS: cross-document copy rejected before clipboard write
+PASS: cross-document resolve rejected
+PASS: statuses survive store reload
+PASS: legacy comments without status load as pending
+PASS: persistence failure reported after clipboard success
+COMMENT TESTS: 30 passed

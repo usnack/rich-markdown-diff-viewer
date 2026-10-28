@@ -4,6 +4,7 @@ import WebKit
 final class App: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKNavigationDelegate {
     var window: NSWindow!; var web: WKWebView!
     var repo: URL?; var selected = ""; var mode = "total"; var layout = "unified"; var only = false; var paused = false
+    var commitBases: [String: String] = [:]
     var generation = 0; var busy = false; var lastPayload = ""; var timer: Timer?
     let queue = DispatchQueue(label: "richdiff.git", qos: .userInitiated)
     let defaults = UserDefaults.standard
@@ -16,7 +17,9 @@ final class App: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKNavi
         if let i = args.firstIndex(of: "--verify"), args.count > i + 1 { verifyPath = args[i + 1] }
         if let verifyPath { commentStore = CommentStore(url: URL(fileURLWithPath: verifyPath).appendingPathComponent("test-comments.json")) }
         if let p = defaults.string(forKey: "repo") { repo = URL(fileURLWithPath: p) }
+        commitBases = defaults.dictionary(forKey: "comparisonCommits") as? [String: String] ?? [:]
         selected = defaults.string(forKey: "selected") ?? ""; mode = defaults.string(forKey: "mode") ?? "total"; layout = defaults.string(forKey: "layout") ?? "unified"; only = defaults.bool(forKey: "only")
+        if verifyPath != nil { mode = "total" }
         if let i = args.firstIndex(of: "--repo"), args.count > i + 1 { repo = URL(fileURLWithPath: args[i + 1]); selected = "" }
         let config = WKWebViewConfiguration()
         config.userContentController.add(self, contentWorld: world, name: "native")
@@ -69,6 +72,25 @@ final class App: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKNavi
             }
         }
     }
+    func selectCommit(_ revision: String, request: String) {
+        guard let repo else { return }
+        invalidate(); let token = generation
+        queue.async {
+            var response: [String: Any] = ["request": request, "repo": repo.path, "ok": false]
+            var resolved = ""; var root = repo
+            do {
+                let git = try Git(repo); root = git.root; resolved = try git.resolveCommit(revision)
+                response["ok"] = true; response["commit"] = resolved
+            } catch { response["error"] = error.localizedDescription }
+            let result = response; let commit = resolved; let finalRoot = root
+            DispatchQueue.main.async {
+                guard token == self.generation else { return }
+                if !commit.isEmpty { self.repo = finalRoot; self.commitBases[finalRoot.path] = commit; self.mode = "commit"; self.persist() }
+                if let data = try? JSONSerialization.data(withJSONObject: result), let json = String(data: data, encoding: .utf8) { self.web.evaluateJavaScript("window.receiveCommitResult(\(json))", completionHandler: nil) }
+                self.invalidate(); self.refresh(force: true)
+            }
+        }
+    }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
     @objc func openRepo() {
         let panel = NSOpenPanel(); panel.canChooseDirectories = true; panel.canChooseFiles = false; panel.allowsMultipleSelection = false; panel.prompt = "저장소 열기"
@@ -83,17 +105,18 @@ final class App: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKNavi
         case "ready": refresh(force: true)
         case "open": openRepo()
         case "file": if let value = data["value"] as? String { selected = value; invalidate(); refresh(force: true) }
-        case "mode": if let value = data["value"] as? String, ["total", "unstaged", "staged"].contains(value) { mode = value; invalidate(); refresh(force: true) }
+        case "mode": if let value = data["value"] as? String, ["total", "unstaged", "staged", "commit"].contains(value) { mode = value; invalidate(); refresh(force: true) }
+        case "commit": if let input = data["value"] as? [String: Any], let value = input["revision"] as? String, let request = input["request"] as? String { selectCommit(value, request: request) }
         case "layout": if let value = data["value"] as? String, ["unified", "split"].contains(value) { layout = value; persist() }
         case "only": only = data["value"] as? Bool ?? false; persist()
         case "pause": paused = data["value"] as? Bool ?? false; if !paused { invalidate(); refresh(force: true) }
-        case "commentAdd", "commentEdit", "commentDelete", "commentCopy", "commentsCopy":
+        case "commentAdd", "commentEdit", "commentDelete", "commentResolve", "commentCopy", "commentsCopy":
             if let input = data["value"] as? [String: Any] { handleComment(action, input) }
         case "external": if let s = data["value"] as? String, let url = URL(string: s), ["https", "http"].contains(url.scheme?.lowercased() ?? "") { NSWorkspace.shared.open(url) }
         default: break
         }
     }
-    func persist() { defaults.set(repo?.path, forKey: "repo"); defaults.set(selected, forKey: "selected"); defaults.set(mode, forKey: "mode"); defaults.set(layout, forKey: "layout"); defaults.set(only, forKey: "only") }
+    func persist() { defaults.set(repo?.path, forKey: "repo"); defaults.set(selected, forKey: "selected"); defaults.set(mode, forKey: "mode"); defaults.set(layout, forKey: "layout"); defaults.set(only, forKey: "only"); defaults.set(commitBases, forKey: "comparisonCommits") }
     func send(_ original: [String: Any]) {
         var payload = original
         if let root = payload["repo"] as? String, let file = payload["selected"] as? String {
@@ -102,7 +125,7 @@ final class App: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKNavi
             if let snapshot = payload["snapshot"] as? [String: Any], let before = snapshot["before"] as? String, let after = snapshot["after"] as? String {
                 let files = payload["files"] as? [[String: Any]] ?? []
                 let old = files.first(where: { ($0["path"] as? String) == file })?["oldPath"] as? String ?? file
-                review = ReviewDocument(repository: root, document: file, oldPath: old, before: before, after: after, beforeVersion: snapshot["beforeLabel"] as? String ?? "", afterVersion: snapshot["afterLabel"] as? String ?? "")
+                review = ReviewDocument(repository: root, document: file, oldPath: old, before: before, after: after, beforeVersion: snapshot["beforeVersion"] as? String ?? snapshot["beforeLabel"] as? String ?? "", afterVersion: snapshot["afterLabel"] as? String ?? "")
                 payload["commentContext"] = review?.id
             } else {
                 review = ReviewDocument(repository: root, document: file, oldPath: file, before: "", after: "", beforeVersion: "", afterVersion: "")
@@ -119,18 +142,27 @@ final class App: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKNavi
         guard (!paused || force), !busy else { return }
         guard let repo else { send(["files": [], "repo": "", "selected": "", "mode": mode, "layout": layout, "only": only]); return }
         busy = true
-        let token = generation; let currentMode = mode; let currentSelected = selected
+        let token = generation; let currentMode = mode; let currentSelected = selected; let bases = commitBases
         queue.async {
             var payload: [String: Any] = [:]; var selection = currentSelected; var root = repo
             do {
-                let git = try Git(repo); root = git.root; let files = try git.list(currentMode)
+                let git = try Git(repo); root = git.root
+                let base = bases[root.path] ?? ""
+                payload["baseCommit"] = base
+                if currentMode == "commit" {
+                    do { payload["commits"] = try JSONSerialization.jsonObject(with: JSONEncoder().encode(git.commits())) }
+                    catch { payload["commits"] = []; payload["historyError"] = error.localizedDescription }
+                }
+                let needsCommit = currentMode == "commit" && base.isEmpty
+                let files = needsCommit ? [] : try git.list(currentMode, baseCommit: base)
+                if needsCommit { payload["chooseCommit"] = true }
                 if selection.isEmpty { selection = files.first?.path ?? "" }
                 payload["files"] = try JSONSerialization.jsonObject(with: JSONEncoder().encode(files))
                 if let change = files.first(where: { $0.path == selection }) {
                     selection = change.path
-                    do { payload["snapshot"] = try JSONSerialization.jsonObject(with: JSONEncoder().encode(git.snapshot(change, currentMode))) }
+                    do { payload["snapshot"] = try JSONSerialization.jsonObject(with: JSONEncoder().encode(git.snapshot(change, currentMode, baseCommit: base))) }
                     catch { payload["error"] = error.localizedDescription }
-                } else if !selection.isEmpty { payload["missing"] = true }
+                } else if !selection.isEmpty && !needsCommit { payload["missing"] = true }
             } catch { payload["error"] = error.localizedDescription; payload["files"] = [] }
             let result = payload; let finalSelection = selection; let finalRoot = root
             DispatchQueue.main.async {

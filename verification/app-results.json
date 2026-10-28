@@ -138,6 +138,36 @@
     },
     {
       "detail" : "",
+      "name" : "commit picker loads repository history",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "selected historical commit replaces HEAD baseline",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "custom comparison includes already committed changes",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "invalid commit preserves the prior comparison",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "short commit hash input resolves to a full pinned commit",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "custom baseline retained across comparison switches",
+      "pass" : true
+    },
+    {
+      "detail" : "",
       "name" : "nested repository tree rendered",
       "pass" : true
     },
@@ -190,12 +220,42 @@
     },
     {
       "detail" : "",
+      "name" : "new comment status labels are pending",
+      "pass" : true
+    },
+    {
+      "detail" : "",
       "name" : "individual copy acknowledged",
       "pass" : true
     },
     {
       "detail" : "",
+      "name" : "individual copy marks only the selected comment in progress",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "last individually copied comment owns in-progress status",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "Resolve completes a comment and updates its label",
+      "pass" : true
+    },
+    {
+      "detail" : "",
       "name" : "copy all acknowledged",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "copy all preserves resolved and progresses unfinished",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "copying a resolved comment reopens it and resets the other unfinished comment",
       "pass" : true
     },
     {
@@ -206,6 +266,11 @@
     {
       "detail" : "",
       "name" : "comments restored on file return",
+      "pass" : true
+    },
+    {
+      "detail" : "",
+      "name" : "comment statuses retained when changing files",
       "pass" : true
     },
     {
@@ -225,5 +290,5 @@
     "repo" : "\/Users\/usnack\/orca\/rich-markdown-diff-viewer\/verification\/demo",
     "selected" : "01-제품 설계.md"
   },
-  "timestamp" : "2026-10-21T10:33:38.308Z"
+  "timestamp" : "2026-10-28T14:29:51.510Z"
 }

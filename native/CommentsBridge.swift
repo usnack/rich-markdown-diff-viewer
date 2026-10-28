@@ -21,15 +21,13 @@ extension App {
                 let comment = try review.makeComment(side: side, start: start, end: end, body: body)
                 try commentStore.add(comment); result["id"] = comment.id
             case "commentEdit": try commentStore.edit(id: id, repository: review.repository, document: review.document, body: input["body"] as? String ?? "")
+            case "commentResolve": try commentStore.resolve(id: id, repository: review.repository, document: review.document)
             case "commentDelete": try commentStore.delete(id: id, repository: review.repository, document: review.document)
             case "commentCopy", "commentsCopy":
-                let all = commentStore.comments(repository: review.repository, document: review.document)
-                let chosen = action == "commentsCopy" ? all : all.filter { $0.id == id }
-                guard !chosen.isEmpty else { throw AppError(message: "복사할 코멘트가 없습니다.") }
-                let text = chosen.map(exportComment).joined(separator: "\n\n")
-                NSPasteboard.general.clearContents()
-                guard NSPasteboard.general.setString(text, forType: .string) else { throw AppError(message: "클립보드에 복사하지 못했습니다.") }
-                result["count"] = chosen.count
+                result["count"] = try commentStore.copy(id: action == "commentsCopy" ? nil : id, repository: review.repository, document: review.document) { text in
+                    NSPasteboard.general.clearContents()
+                    return NSPasteboard.general.setString(text, forType: .string)
+                }
             default: return
             }
             result["ok"] = true
